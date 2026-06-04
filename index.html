@@ -520,7 +520,7 @@
   }
 
   .cal-cell {
-    min-height: 120px;
+    min-height: 130px;
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     padding: 10px;
@@ -573,6 +573,28 @@
   }
 
   .cell-event-pill:hover { opacity: 0.85; }
+
+  .pill-title {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 80px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .pill-owner {
+    white-space: nowrap;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  .cell-event-pill {
+    display: flex !important;
+    align-items: center;
+    gap: 2px;
+  }
 
   .cell-more {
     font-size: 11px;
@@ -1179,6 +1201,9 @@
       transform: translateX(-100%);
       transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
       overflow-y: auto;
+      background: var(--surface);
+      border-right: 1px solid var(--border2);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.4);
     }
 
     .sidebar.open { transform: translateX(0); }
@@ -1213,15 +1238,9 @@
       border-radius: 6px;
     }
 
-    /* Only show dots on mobile, hide text pills */
-    .cell-event-pill { display: none; }
-    .cell-more { display: none; }
-
-    /* Show colored dots instead */
+    /* Mobile: events shown as dots via JS */
     .cell-events {
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 2px;
+      justify-content: center;
     }
 
     .cal-day-header { padding: 10px 4px; font-size: 10px; }
@@ -1953,6 +1972,8 @@ function renderMainCal() {
   const grid = document.getElementById('main-grid');
   grid.innerHTML = '';
 
+  const isMobile = window.innerWidth <= 768;
+
   for (let i = 0; i < totalCells; i++) {
     const offset = i - startDow;
     const dd = startOfMonth.add(offset, 'day');
@@ -1962,24 +1983,47 @@ function renderMainCal() {
     const isSel = selectedDate === dateStr;
 
     const dayEvents = allEvents.filter(e => e.event_date === dateStr);
-    const showMax = 3;
+    const showMax = isMobile ? 0 : 2;
     const visible = dayEvents.slice(0, showMax);
     const more = dayEvents.length - showMax;
 
-    const pillsHTML = visible.map(e => {
-      const color = e.color || '#4f8ef7';
-      return `<div class="cell-event-pill" style="background:${color}22;color:${color}"
-        onclick="event.stopPropagation();openDetail('${dateStr}')"
-        title="${e.title}">${e.title}</div>`;
-    }).join('');
+    let cellContent = '';
 
-    const moreHTML = more > 0 ? `<div class="cell-more">+${more} more</div>` : '';
+    if (isMobile) {
+      // Mobile: show colored dots with count badge
+      if (dayEvents.length > 0) {
+        const dots = dayEvents.slice(0, 3).map(e => {
+          const color = e.color || '#4f8ef7';
+          return `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0"></span>`;
+        }).join('');
+        cellContent = `<div style="display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:2px">${dots}</div>`;
+        if (dayEvents.length > 3) {
+          cellContent += `<div style="font-size:9px;color:var(--text3);text-align:center;margin-top:1px">+${dayEvents.length-3}</div>`;
+        }
+      }
+    } else {
+      // Desktop: show pills with title + owner name
+      const pillsHTML = visible.map(e => {
+        const color = e.color || '#4f8ef7';
+        const profile = allProfiles[e.user_id];
+        const ownerShort = (profile?.full_name || profile?.email || '?').split(' ')[0];
+        const isMe = e.user_id === currentUser?.id;
+        return `<div class="cell-event-pill" style="background:${color}22;color:${color};border-left:2px solid ${color}"
+          onclick="event.stopPropagation();openDetail('${dateStr}')"
+          title="${e.title} — ${ownerShort}">
+          <span class="pill-title">${e.title}</span>
+          <span class="pill-owner" style="opacity:0.75;font-size:10px;margin-left:3px">${isMe ? '(you)' : ownerShort}</span>
+        </div>`;
+      }).join('');
+      const moreHTML = more > 0 ? `<div class="cell-more">+${more} more</div>` : '';
+      cellContent = pillsHTML + moreHTML;
+    }
 
     grid.innerHTML += `
       <div class="cal-cell${!isCurrentMonth?' other-month':''}${isToday?' today':''}${isSel?' selected':''}"
         onclick="openDetail('${dateStr}')">
         <div class="cell-num">${dd.date()}</div>
-        <div class="cell-events">${pillsHTML}${moreHTML}</div>
+        <div class="cell-events">${cellContent}</div>
       </div>`;
   }
 }
@@ -2289,9 +2333,19 @@ function setLoading(btnId, loading) {
 // ═══════════════════════════════════════════════════════
 function toggleSidebar() {
   const sidebar = document.querySelector('.sidebar');
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen) {
+    closeSidebar();
+  } else {
+    openSidebar();
+  }
+}
+
+function openSidebar() {
+  const sidebar = document.querySelector('.sidebar');
   const overlay = document.getElementById('sidebar-overlay');
-  sidebar.classList.toggle('open');
-  overlay.classList.toggle('open');
+  sidebar.classList.add('open');
+  overlay.classList.add('open');
 }
 
 function closeSidebar() {
@@ -2305,8 +2359,9 @@ function mobileNavSwitch(tab) {
   document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('nav-' + tab)?.classList.add('active');
   if (tab === 'team') {
-    toggleSidebar();
-    document.getElementById('nav-team').classList.add('active');
+    openSidebar();  // always open, never toggle close
+  } else {
+    closeSidebar();  // close sidebar when switching away
   }
 }
 
