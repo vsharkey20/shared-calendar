@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Synced — Shared Calendar</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --surface: #131929;
+    --surface2: #1c2438;
+    --surface3: #232d42;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --accent: #4f8ef7;
+    --accent2: #7c5cfc;
+    --accent-glow: rgba(79,142,247,0.25);
+    --success: #34d399;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --text: #e8edf5;
+    --text2: #8b96ad;
+    --text3: #576072;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --radius-lg: 20px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(79,142,247,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(124,92,252,0.07) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── AUTH SCREEN ─────────────────────────────── */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    padding: 24px;
+  }
+
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 48px 44px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+    animation: slideUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  .auth-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 36px;
+  }
+
+  .auth-logo-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 20px;
+  }
+
+  .auth-logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .auth-tabs {
+    display: flex;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .auth-tab.active {
+    background: var(--surface3);
+    color: var(--text);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .auth-form { display: flex; flex-direction: column; gap: 16px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    letter-spacing: 0.02em;
+  }
+
+  .form-input {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+
+  .form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .form-input::placeholder { color: var(--text3); }
+
+  .btn {
+    padding: 13px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(79,142,247,0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(79,142,247,0.4);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border2);
+  }
+
+  .btn-ghost:hover { background: var(--surface3); color: var(--text); }
+
+  .btn-danger-ghost {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid rgba(248,113,113,0.3);
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+
+  .btn-danger-ghost:hover { background: rgba(248,113,113,0.1); }
+
+  .auth-error {
+    background: rgba(248,113,113,0.1);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--danger);
+    display: none;
+  }
+
+  /* ─── MAIN APP ─────────────────────────────────── */
+  #app-screen {
+    display: none;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: rgba(19,25,41,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 9px;
+    display: grid; place-items: center;
+    font-size: 16px;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 100px;
+    padding: 6px 14px 6px 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .user-chip:hover { background: var(--surface3); }
+
+  .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: grid; place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .user-chip-name { font-size: 14px; font-weight: 500; }
+
+  /* MAIN LAYOUT */
+  .app-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: calc(100vh - 64px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+  }
+
+  .sidebar-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+
+  /* Mini calendar */
+  .mini-cal { width: 100%; }
+
+  .mini-cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .mini-cal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .mini-nav {
+    width: 28px; height: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 7px;
+    color: var(--text2);
+    cursor: pointer;
+    display: grid; place-items: center;
+    font-size: 14px;
+    transition: all 0.15s;
+    font-family: monospace;
+  }
+
+  .mini-nav:hover { background: var(--surface3); color: var(--text); }
+
+  .mini-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+
+  .mini-day-label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    padding: 4px 0 6px;
+  }
+
+  .mini-day {
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .mini-day:hover { background: var(--surface2); color: var(--text); }
+
+  .mini-day.today {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .mini-day.selected {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .mini-day.other-month { color: var(--text3); }
+
+  .mini-day.has-events::after {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    left: 50%; transform: translateX(-50%);
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .mini-day.selected.has-events::after { background: rgba(255,255,255,0.7); }
+
+  /* Legend */
+  .legend-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Users online list */
+  .users-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .user-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+  }
+
+  .user-row-info { flex: 1; min-width: 0; }
+
+  .user-row-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .user-row-events { font-size: 11px; color: var(--text3); }
+
+  /* MAIN CALENDAR */
+  .calendar-main {
+    padding: 28px;
+    overflow-y: auto;
+  }
+
+  .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .cal-title-group { display: flex; align-items: baseline; gap: 12px; }
+
+  .cal-month {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .cal-year {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text3);
+  }
+
+  .cal-nav-group { display: flex; gap: 8px; align-items: center; }
+
+  .cal-nav {
+    width: 38px; height: 38px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text2);
+    cursor: pointer;
+    display: grid; place-items: center;
+    font-size: 16px;
+    font-family: monospace;
+    transition: all 0.15s;
+  }
+
+  .cal-nav:hover { background: var(--surface2); color: var(--text); }
+
+  .today-btn {
+    padding: 8px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .today-btn:hover { background: var(--surface2); color: var(--text); }
+
+  /* Full calendar grid */
+  .cal-grid-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .cal-day-headers {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cal-day-header {
+    padding: 14px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    text-align: center;
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .cal-cell {
+    min-height: 120px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cal-cell:nth-child(7n) { border-right: none; }
+
+  .cal-cell:hover { background: var(--surface2); }
+
+  .cal-cell.other-month { opacity: 0.4; }
+
+  .cal-cell.today .cell-num {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-weight: 700;
+  }
+
+  .cal-cell.selected {
+    background: rgba(79,142,247,0.06);
+  }
+
+  .cell-num {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    margin-bottom: 6px;
+  }
+
+  .cell-events { display: flex; flex-direction: column; gap: 3px; }
+
+  .cell-event-pill {
+    padding: 3px 7px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .cell-event-pill:hover { opacity: 0.85; }
+
+  .cell-more {
+    font-size: 11px;
+    color: var(--text3);
+    padding: 2px 6px;
+    margin-top: 2px;
+  }
+
+  /* ─── DETAIL PANEL ─────────────────────────────── */
+  .detail-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .detail-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+  .detail-panel {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+    animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  .panel-header {
+    padding: 24px 24px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    z-index: 1;
+  }
+
+  .panel-date {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .panel-date-sub {
+    font-size: 13px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .panel-close {
+    width: 32px; height: 32px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text2);
+    cursor: pointer;
+    display: grid; place-items: center;
+    font-size: 16px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .panel-close:hover { background: var(--surface3); color: var(--text); }
+
+  .panel-body { padding: 20px 24px 24px; }
+
+  /* Add event form */
+  .add-event-form {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 20px;
+  }
+
+  .add-event-form h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .form-select {
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .form-select:focus { border-color: var(--accent); }
+
+  .color-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .color-opt {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .color-opt:hover { transform: scale(1.15); }
+  .color-opt.selected { border-color: #fff; transform: scale(1.1); }
+
+  /* Event items */
+  .events-section h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .event-items { display: flex; flex-direction: column; gap: 10px; }
+
+  .event-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .event-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--event-color, var(--accent));
+  }
+
+  .event-item:hover { border-color: var(--border2); }
+
+  .event-item-body { flex: 1; min-width: 0; }
+
+  .event-item-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .event-item-meta {
+    font-size: 12px;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .event-item-owner {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .event-item-desc {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .event-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+  .icon-btn {
+    width: 30px; height: 30px;
+    border: 1px solid var(--border2);
+    border-radius: 7px;
+    background: var(--surface3);
+    color: var(--text2);
+    cursor: pointer;
+    display: grid; place-items: center;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+
+  .icon-btn:hover { color: var(--text); background: var(--surface2); }
+
+  .icon-btn.delete:hover { color: var(--danger); border-color: rgba(248,113,113,0.4); }
+
+  .type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .type-available { background: rgba(52,211,153,0.15); color: var(--success); }
+  .type-busy { background: rgba(248,113,113,0.15); color: var(--danger); }
+  .type-event { background: rgba(79,142,247,0.15); color: var(--accent); }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--text3);
+    font-size: 14px;
+  }
+
+  .empty-state .empty-icon { font-size: 36px; margin-bottom: 10px; }
+
+  /* Edit modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+  .modal-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+    animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 20px;
+  }
+
+  /* Profile panel */
+  .profile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .profile-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+  .profile-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 36px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+    animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+    text-align: center;
+  }
+
+  .profile-avatar-lg {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: grid; place-items: center;
+    font-size: 32px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 auto 16px;
+    box-shadow: 0 0 0 4px rgba(79,142,247,0.2);
+  }
+
+  .profile-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .profile-email { font-size: 14px; color: var(--text3); margin-bottom: 24px; }
+
+  .profile-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .profile-stat {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 10px;
+  }
+
+  .profile-stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .profile-stat-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .profile-actions { display: flex; gap: 10px; flex-direction: column; }
+
+  /* Toast */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    animation: toastIn 0.3s cubic-bezier(0.22,1,0.36,1) both;
+    min-width: 240px;
+    pointer-events: all;
+  }
+
+  .toast.success { border-left: 3px solid var(--success); }
+  .toast.error { border-left: 3px solid var(--danger); }
+  .toast.info { border-left: 3px solid var(--accent); }
+
+  /* Config banner */
+  .config-banner {
+    background: rgba(251,191,36,0.1);
+    border-bottom: 1px solid rgba(251,191,36,0.3);
+    padding: 12px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--warning);
+  }
+
+  .config-banner code {
+    background: rgba(251,191,36,0.15);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: monospace;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: inline-block;
+  }
+
+  /* Animations */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .app-layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .cal-cell { min-height: 70px; }
+    .cal-month { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CONFIG SETUP HINT (shown before Supabase is configured) -->
+<div id="config-banner" class="config-banner" style="display:none">
+  ⚠️ Configure Supabase: open the JS section and set <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> with your project credentials.
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">📅</div>
+      <div class="auth-logo-text">Synced</div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
+    </div>
+
+    <div id="auth-error" class="auth-error"></div>
+
+    <!-- Login form -->
+    <div id="login-form" class="auth-form">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="login-email" class="form-input" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="login-password" class="form-input" placeholder="••••••••" />
+      </div>
+      <button class="btn btn-primary" onclick="handleLogin()" id="login-btn">
+        Sign In
+      </button>
+    </div>
+
+    <!-- Register form -->
+    <div id="register-form" class="auth-form" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" id="reg-name" class="form-input" placeholder="Your name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="reg-email" class="form-input" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="reg-password" class="form-input" placeholder="min 6 characters" />
+      </div>
+      <button class="btn btn-primary" onclick="handleRegister()" id="reg-btn">
+        Create Account
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-screen">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">📅</div>
+      Synced
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip" onclick="openProfile()">
+        <div class="avatar" id="topbar-avatar">?</div>
+        <span class="user-chip-name" id="topbar-name">User</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Mini calendar -->
+      <div>
+        <div class="sidebar-section-title">Navigate</div>
+        <div class="mini-cal">
+          <div class="mini-cal-header">
+            <button class="mini-nav" onclick="miniPrev()">‹</button>
+            <div class="mini-cal-title" id="mini-month-label"></div>
+            <button class="mini-nav" onclick="miniNext()">›</button>
+          </div>
+          <div class="mini-cal-grid" id="mini-grid"></div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div>
+        <div class="sidebar-section-title">Event Types</div>
+        <div class="legend-list">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--success)"></div>
+            Available
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--danger)"></div>
+            Busy / Unavailable
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--accent)"></div>
+            Event / Appointment
+          </div>
+        </div>
+      </div>
+
+      <!-- Other users -->
+      <div>
+        <div class="sidebar-section-title">Team Members</div>
+        <div class="users-list" id="users-list">
+          <div style="font-size:13px;color:var(--text3)">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main calendar -->
+    <div class="calendar-main">
+      <div class="cal-header">
+        <div class="cal-title-group">
+          <div class="cal-month" id="main-month"></div>
+          <div class="cal-year" id="main-year"></div>
+        </div>
+        <div class="cal-nav-group">
+          <button class="today-btn" onclick="goToday()">Today</button>
+          <button class="cal-nav" onclick="mainPrev()">‹</button>
+          <button class="cal-nav" onclick="mainNext()">›</button>
+        </div>
+      </div>
+
+      <div class="cal-grid-wrapper">
+        <div class="cal-day-headers">
+          <div class="cal-day-header">Sun</div>
+          <div class="cal-day-header">Mon</div>
+          <div class="cal-day-header">Tue</div>
+          <div class="cal-day-header">Wed</div>
+          <div class="cal-day-header">Thu</div>
+          <div class="cal-day-header">Fri</div>
+          <div class="cal-day-header">Sat</div>
+        </div>
+        <div class="cal-grid" id="main-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DAY DETAIL PANEL -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetailIfBg(event)">
+  <div class="detail-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-date" id="panel-date"></div>
+        <div class="panel-date-sub" id="panel-date-sub"></div>
+      </div>
+      <button class="panel-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="panel-body">
+      <!-- Add event form -->
+      <div class="add-event-form">
+        <h4>+ Add to this day</h4>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">Title</label>
+          <input type="text" id="new-title" class="form-input" placeholder="What's happening?" style="background:var(--surface3)" />
+        </div>
+        <div class="form-row" style="margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select id="new-type" class="form-select">
+              <option value="available">✅ Available</option>
+              <option value="busy">🔴 Busy</option>
+              <option value="event">📌 Event</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Time (optional)</label>
+            <input type="time" id="new-time" class="form-input" style="background:var(--surface3)" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">Description (optional)</label>
+          <input type="text" id="new-desc" class="form-input" placeholder="Add a note..." style="background:var(--surface3)" />
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">Color</label>
+          <div class="color-row" id="color-picker"></div>
+        </div>
+        <button class="btn btn-primary" onclick="addEvent()" id="add-btn" style="width:100%">
+          Add Entry
+        </button>
+      </div>
+
+      <!-- Events list -->
+      <div class="events-section">
+        <h4>All entries for this day</h4>
+        <div class="event-items" id="day-events-list">
+          <div class="empty-state">
+            <div class="empty-icon">🗓️</div>
+            No entries yet. Be the first to add one!
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal" onclick="closeEditIfBg(event)">
+  <div class="modal-card">
+    <div class="modal-title">Edit Entry</div>
+    <input type="hidden" id="edit-id" />
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Title</label>
+      <input type="text" id="edit-title" class="form-input" />
+    </div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select id="edit-type" class="form-select">
+          <option value="available">✅ Available</option>
+          <option value="busy">🔴 Busy</option>
+          <option value="event">📌 Event</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Time</label>
+        <input type="time" id="edit-time" class="form-input" />
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Description</label>
+      <input type="text" id="edit-desc" class="form-input" />
+    </div>
+    <div class="form-group" style="margin-bottom:18px">
+      <label class="form-label">Color</label>
+      <div class="color-row" id="edit-color-picker"></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="closeEdit()" style="flex:1">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEdit()" style="flex:1">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="profile-overlay" id="profile-overlay" onclick="closeProfileIfBg(event)">
+  <div class="profile-card">
+    <div class="profile-avatar-lg" id="profile-avatar-lg">?</div>
+    <div class="profile-name" id="profile-name-lg">-</div>
+    <div class="profile-email" id="profile-email-lg">-</div>
+    <div class="profile-stats">
+      <div class="profile-stat">
+        <div class="profile-stat-num" id="stat-total">0</div>
+        <div class="profile-stat-label">Total Entries</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-num" id="stat-available">0</div>
+        <div class="profile-stat-label">Available</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-num" id="stat-busy">0</div>
+        <div class="profile-stat-label">Busy</div>
+      </div>
+    </div>
+    <div class="profile-actions">
+      <button class="btn btn-danger-ghost" onclick="handleLogout()">Sign Out</button>
+      <button class="btn btn-ghost" onclick="closeProfile()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  ⚙️  CONFIGURATION — Replace with your Supabase credentials
+// ═══════════════════════════════════════════════════════
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';         // e.g. https://xyzxyz.supabase.co
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // your anon/public key
+
+// ═══════════════════════════════════════════════════════
+//  SUPABASE CLIENT (lightweight fetch wrapper — no SDK needed)
+// ═══════════════════════════════════════════════════════
+const sb = {
+  headers: {
+    'apikey': SUPABASE_ANON_KEY,
+    'Content-Type': 'application/json'
+  },
+  authHeaders(token) {
+    return { ...this.headers, 'Authorization': `Bearer ${token}` };
+  },
+  async signUp(email, password, name) {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method: 'POST', headers: this.headers,
+      body: JSON.stringify({ email, password, data: { full_name: name } })
+    });
+    return r.json();
+  },
+  async signIn(email, password) {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST', headers: this.headers,
+      body: JSON.stringify({ email, password })
+    });
+    return r.json();
+  },
+  async signOut(token) {
+    await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+      method: 'POST', headers: this.authHeaders(token)
+    });
+  },
+  async getUser(token) {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: this.authHeaders(token)
+    });
+    return r.json();
+  },
+  async select(table, query, token) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
+      headers: { ...this.authHeaders(token), 'Prefer': 'return=representation' }
+    });
+    return r.json();
+  },
+  async insert(table, data, token) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: { ...this.authHeaders(token), 'Prefer': 'return=representation' },
+      body: JSON.stringify(data)
+    });
+    return r.json();
+  },
+  async update(table, data, match, token) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${match}`, {
+      method: 'PATCH',
+      headers: { ...this.authHeaders(token), 'Prefer': 'return=representation' },
+      body: JSON.stringify(data)
+    });
+    return r.json();
+  },
+  async delete(table, match, token) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${match}`, {
+      method: 'DELETE',
+      headers: this.authHeaders(token)
+    });
+    return r.ok;
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let currentUser = null;
+let authToken = null;
+let currentDate = dayjs();
+let selectedDate = null;
+let allEvents = [];
+let allProfiles = {};
+let editColor = '#4f8ef7';
+let newColor = '#4f8ef7';
+
+const COLORS = [
+  '#4f8ef7','#7c5cfc','#34d399','#f87171',
+  '#fbbf24','#f472b6','#22d3ee','#a78bfa'
+];
+
+const TYPE_CONFIG = {
+  available: { label: 'Available', badge: 'type-available', icon: '✅' },
+  busy:      { label: 'Busy',      badge: 'type-busy',      icon: '🔴' },
+  event:     { label: 'Event',     badge: 'type-event',     icon: '📌' }
+};
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  // Check config
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+    document.getElementById('config-banner').style.display = 'flex';
+  }
+
+  // Restore session
+  const saved = localStorage.getItem('synced_session');
+  if (saved) {
+    try {
+      const s = JSON.parse(saved);
+      authToken = s.token;
+      currentUser = s.user;
+      showApp();
+    } catch(e) { showAuth(); }
+  } else {
+    showAuth();
+  }
+
+  buildColorPicker('color-picker', (c) => newColor = c, '#4f8ef7');
+  buildColorPicker('edit-color-picker', (c) => editColor = c, '#4f8ef7');
+});
+
+// ═══════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='register'));
+  });
+  document.getElementById('login-form').style.display = tab==='login' ? 'flex' : 'none';
+  document.getElementById('register-form').style.display = tab==='register' ? 'flex' : 'none';
+  hideAuthError();
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+
+function hideAuthError() {
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+async function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) return showAuthError('Please fill in all fields.');
+
+  setLoading('login-btn', true);
+  hideAuthError();
+
+  const res = await sb.signIn(email, password);
+  setLoading('login-btn', false);
+
+  if (res.error || !res.access_token) {
+    showAuthError(res.error?.message || res.error_description || 'Login failed. Check credentials.');
+    return;
+  }
+
+  authToken = res.access_token;
+  currentUser = res.user;
+  localStorage.setItem('synced_session', JSON.stringify({ token: authToken, user: currentUser }));
+  await ensureProfile();
+  showApp();
+}
+
+async function handleRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+
+  if (!name || !email || !password) return showAuthError('Please fill in all fields.');
+  if (password.length < 6) return showAuthError('Password must be at least 6 characters.');
+
+  setLoading('reg-btn', true);
+  hideAuthError();
+
+  const res = await sb.signUp(email, password, name);
+  setLoading('reg-btn', false);
+
+  if (res.error) {
+    showAuthError(res.error.message || 'Registration failed.');
+    return;
+  }
+
+  // Auto sign in after register
+  const loginRes = await sb.signIn(email, password);
+  if (loginRes.access_token) {
+    authToken = loginRes.access_token;
+    currentUser = loginRes.user;
+    localStorage.setItem('synced_session', JSON.stringify({ token: authToken, user: currentUser }));
+    await ensureProfile();
+    showApp();
+  } else {
+    showAuthError('Account created! Please sign in.');
+    switchTab('login');
+  }
+}
+
+async function handleLogout() {
+  await sb.signOut(authToken);
+  localStorage.removeItem('synced_session');
+  authToken = null; currentUser = null; allEvents = [];
+  closeProfile();
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+}
+
+async function ensureProfile() {
+  if (!currentUser) return;
+  const existing = await sb.select('profiles', `id=eq.${currentUser.id}`, authToken);
+  if (!existing || existing.length === 0) {
+    const name = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'User';
+    await sb.insert('profiles', {
+      id: currentUser.id,
+      email: currentUser.email,
+      full_name: name
+    }, authToken);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SHOW APP
+// ═══════════════════════════════════════════════════════
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+
+  const name = currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'User';
+  document.getElementById('topbar-name').textContent = name;
+  document.getElementById('topbar-avatar').textContent = name.charAt(0).toUpperCase();
+
+  renderCalendars();
+  loadData();
+}
+
+function showAuth() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════
+async function loadData() {
+  try {
+    // Load all events
+    const events = await sb.select('calendar_events', 'order=event_date.asc', authToken);
+    allEvents = Array.isArray(events) ? events : [];
+
+    // Load all profiles
+    const profiles = await sb.select('profiles', 'select=id,full_name,email', authToken);
+    if (Array.isArray(profiles)) {
+      profiles.forEach(p => allProfiles[p.id] = p);
+    }
+
+    renderCalendars();
+    renderUsersList();
+    if (selectedDate) renderDayEvents(selectedDate);
+  } catch(e) {
+    toast('Failed to load data.', 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CALENDAR RENDER
+// ═══════════════════════════════════════════════════════
+function renderCalendars() {
+  renderMiniCal();
+  renderMainCal();
+}
+
+function renderMiniCal() {
+  const d = currentDate;
+  document.getElementById('mini-month-label').textContent = d.format('MMM YYYY');
+
+  const startOfMonth = d.startOf('month');
+  const daysInMonth = d.daysInMonth();
+  const startDow = startOfMonth.day();
+
+  const labels = ['S','M','T','W','T','F','S'];
+  const grid = document.getElementById('mini-grid');
+  grid.innerHTML = labels.map(l => `<div class="mini-day-label">${l}</div>`).join('');
+
+  // Blanks
+  for (let i = 0; i < startDow; i++) grid.innerHTML += `<div></div>`;
+
+  const today = dayjs().format('YYYY-MM-DD');
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dd = d.date(day);
+    const dateStr = dd.format('YYYY-MM-DD');
+    const hasEvt = allEvents.some(e => e.event_date === dateStr);
+    const isToday = dateStr === today;
+    const isSel = selectedDate === dateStr;
+
+    grid.innerHTML += `<div class="mini-day${isToday?' today':''}${isSel?' selected':''}${hasEvt?' has-events':''}"
+      onclick="selectDate('${dateStr}')">${day}</div>`;
+  }
+}
+
+function renderMainCal() {
+  const d = currentDate;
+  document.getElementById('main-month').textContent = d.format('MMMM');
+  document.getElementById('main-year').textContent = d.format('YYYY');
+
+  const startOfMonth = d.startOf('month');
+  const daysInMonth = d.daysInMonth();
+  const startDow = startOfMonth.day();
+  const totalCells = Math.ceil((startDow + daysInMonth) / 7) * 7;
+
+  const today = dayjs().format('YYYY-MM-DD');
+  const grid = document.getElementById('main-grid');
+  grid.innerHTML = '';
+
+  for (let i = 0; i < totalCells; i++) {
+    const offset = i - startDow;
+    const dd = startOfMonth.add(offset, 'day');
+    const dateStr = dd.format('YYYY-MM-DD');
+    const isCurrentMonth = dd.month() === d.month();
+    const isToday = dateStr === today;
+    const isSel = selectedDate === dateStr;
+
+    const dayEvents = allEvents.filter(e => e.event_date === dateStr);
+    const showMax = 3;
+    const visible = dayEvents.slice(0, showMax);
+    const more = dayEvents.length - showMax;
+
+    const pillsHTML = visible.map(e => {
+      const color = e.color || '#4f8ef7';
+      return `<div class="cell-event-pill" style="background:${color}22;color:${color}"
+        onclick="event.stopPropagation();openDetail('${dateStr}')"
+        title="${e.title}">${e.title}</div>`;
+    }).join('');
+
+    const moreHTML = more > 0 ? `<div class="cell-more">+${more} more</div>` : '';
+
+    grid.innerHTML += `
+      <div class="cal-cell${!isCurrentMonth?' other-month':''}${isToday?' today':''}${isSel?' selected':''}"
+        onclick="openDetail('${dateStr}')">
+        <div class="cell-num">${dd.date()}</div>
+        <div class="cell-events">${pillsHTML}${moreHTML}</div>
+      </div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════
+function miniPrev() { currentDate = currentDate.subtract(1,'month'); renderCalendars(); }
+function miniNext() { currentDate = currentDate.add(1,'month'); renderCalendars(); }
+function mainPrev() { currentDate = currentDate.subtract(1,'month'); renderCalendars(); }
+function mainNext() { currentDate = currentDate.add(1,'month'); renderCalendars(); }
+function goToday() { currentDate = dayjs(); selectedDate = dayjs().format('YYYY-MM-DD'); renderCalendars(); }
+
+function selectDate(dateStr) {
+  selectedDate = dateStr;
+  currentDate = dayjs(dateStr);
+  renderCalendars();
+  openDetail(dateStr);
+}
+
+// ═══════════════════════════════════════════════════════
+//  DETAIL PANEL
+// ═══════════════════════════════════════════════════════
+function openDetail(dateStr) {
+  selectedDate = dateStr;
+  renderCalendars();
+
+  const d = dayjs(dateStr);
+  document.getElementById('panel-date').textContent = d.format('MMMM D, YYYY');
+  document.getElementById('panel-date-sub').textContent = d.format('dddd');
+  document.getElementById('new-title').value = '';
+  document.getElementById('new-time').value = '';
+  document.getElementById('new-desc').value = '';
+  document.getElementById('new-type').value = 'available';
+  newColor = '#4f8ef7';
+  buildColorPicker('color-picker', (c) => newColor = c, newColor);
+
+  renderDayEvents(dateStr);
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+
+function closeDetailIfBg(e) {
+  if (e.target === document.getElementById('detail-overlay')) closeDetail();
+}
+
+function renderDayEvents(dateStr) {
+  const list = document.getElementById('day-events-list');
+  const events = allEvents.filter(e => e.event_date === dateStr);
+
+  if (events.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🗓️</div>No entries yet. Be the first!</div>`;
+    return;
+  }
+
+  list.innerHTML = events.map(e => {
+    const tc = TYPE_CONFIG[e.type] || TYPE_CONFIG.event;
+    const color = e.color || '#4f8ef7';
+    const profile = allProfiles[e.user_id];
+    const ownerName = profile?.full_name || profile?.email || 'Unknown';
+    const isOwner = e.user_id === currentUser?.id;
+    const timeStr = e.event_time ? `<span>🕐 ${formatTime(e.event_time)}</span>` : '';
+    const descStr = e.description ? `<div class="event-item-desc">${e.description}</div>` : '';
+
+    const actions = isOwner ? `
+      <div class="event-actions">
+        <button class="icon-btn" onclick="openEdit(${JSON.stringify(e).replace(/"/g,'&quot;')})" title="Edit">✏️</button>
+        <button class="icon-btn delete" onclick="deleteEvent('${e.id}')" title="Delete">🗑️</button>
+      </div>` : '';
+
+    return `<div class="event-item" style="--event-color:${color}">
+      <div class="event-item-body">
+        <div class="event-item-title">${e.title}</div>
+        <div class="event-item-meta">
+          <span class="type-badge ${tc.badge}">${tc.icon} ${tc.label}</span>
+          ${timeStr}
+          <span class="event-item-owner">
+            <span style="width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${ownerName.charAt(0).toUpperCase()}</span>
+            ${ownerName}${isOwner ? ' (you)' : ''}
+          </span>
+        </div>
+        ${descStr}
+      </div>
+      ${actions}
+    </div>`;
+  }).join('');
+}
+
+function formatTime(t) {
+  if (!t) return '';
+  const [h,m] = t.split(':');
+  const hour = parseInt(h);
+  return `${hour % 12 || 12}:${m} ${hour < 12 ? 'AM' : 'PM'}`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADD EVENT
+// ═══════════════════════════════════════════════════════
+async function addEvent() {
+  const title = document.getElementById('new-title').value.trim();
+  if (!title) { toast('Please enter a title.', 'error'); return; }
+
+  setLoading('add-btn', true);
+
+  const payload = {
+    user_id: currentUser.id,
+    event_date: selectedDate,
+    title,
+    type: document.getElementById('new-type').value,
+    event_time: document.getElementById('new-time').value || null,
+    description: document.getElementById('new-desc').value.trim() || null,
+    color: newColor
+  };
+
+  const res = await sb.insert('calendar_events', payload, authToken);
+
+  if (Array.isArray(res) && res.length > 0) {
+    allEvents.push(res[0]);
+    renderCalendars();
+    renderDayEvents(selectedDate);
+    renderUsersList();
+    updateProfileStats();
+    toast('Entry added!', 'success');
+    document.getElementById('new-title').value = '';
+    document.getElementById('new-desc').value = '';
+    document.getElementById('new-time').value = '';
+  } else {
+    toast('Failed to add entry. Check your Supabase RLS policies.', 'error');
+  }
+
+  setLoading('add-btn', false);
+}
+
+// ═══════════════════════════════════════════════════════
+//  EDIT EVENT
+// ═══════════════════════════════════════════════════════
+function openEdit(event) {
+  if (event.user_id !== currentUser?.id) { toast('You can only edit your own entries.', 'error'); return; }
+
+  document.getElementById('edit-id').value = event.id;
+  document.getElementById('edit-title').value = event.title;
+  document.getElementById('edit-type').value = event.type;
+  document.getElementById('edit-time').value = event.event_time || '';
+  document.getElementById('edit-desc').value = event.description || '';
+  editColor = event.color || '#4f8ef7';
+  buildColorPicker('edit-color-picker', (c) => editColor = c, editColor);
+
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+async function saveEdit() {
+  const id = document.getElementById('edit-id').value;
+  const title = document.getElementById('edit-title').value.trim();
+  if (!title) { toast('Title is required.', 'error'); return; }
+
+  const payload = {
+    title,
+    type: document.getElementById('edit-type').value,
+    event_time: document.getElementById('edit-time').value || null,
+    description: document.getElementById('edit-desc').value.trim() || null,
+    color: editColor
+  };
+
+  const res = await sb.update('calendar_events', payload, `id=eq.${id}`, authToken);
+
+  if (Array.isArray(res) && res.length > 0) {
+    const idx = allEvents.findIndex(e => e.id === id);
+    if (idx !== -1) allEvents[idx] = res[0];
+    renderCalendars();
+    renderDayEvents(selectedDate);
+    closeEdit();
+    toast('Entry updated!', 'success');
+  } else {
+    toast('Update failed.', 'error');
+  }
+}
+
+function closeEdit() {
+  document.getElementById('edit-modal').classList.remove('open');
+}
+
+function closeEditIfBg(e) {
+  if (e.target === document.getElementById('edit-modal')) closeEdit();
+}
+
+// ═══════════════════════════════════════════════════════
+//  DELETE EVENT
+// ═══════════════════════════════════════════════════════
+async function deleteEvent(id) {
+  const event = allEvents.find(e => e.id === id);
+  if (!event || event.user_id !== currentUser?.id) {
+    toast('You can only delete your own entries.', 'error');
+    return;
+  }
+  if (!confirm('Delete this entry?')) return;
+
+  const ok = await sb.delete('calendar_events', `id=eq.${id}`, authToken);
+  if (ok) {
+    allEvents = allEvents.filter(e => e.id !== id);
+    renderCalendars();
+    renderDayEvents(selectedDate);
+    renderUsersList();
+    updateProfileStats();
+    toast('Entry deleted.', 'info');
+  } else {
+    toast('Delete failed.', 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  USERS LIST (sidebar)
+// ═══════════════════════════════════════════════════════
+function renderUsersList() {
+  const list = document.getElementById('users-list');
+  const uniqueUserIds = [...new Set(allEvents.map(e => e.user_id))];
+
+  // Always show current user first
+  const currentId = currentUser?.id;
+  const ordered = [currentId, ...uniqueUserIds.filter(id => id !== currentId)];
+  const seen = new Set();
+  const final = ordered.filter(id => { if (seen.has(id)) return false; seen.add(id); return true; });
+
+  if (final.length === 0) {
+    list.innerHTML = `<div style="font-size:13px;color:var(--text3)">No team members yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = final.map(uid => {
+    const p = allProfiles[uid];
+    const name = p?.full_name || p?.email?.split('@')[0] || uid.slice(0,8);
+    const count = allEvents.filter(e => e.user_id === uid).length;
+    const isYou = uid === currentId;
+    return `<div class="user-row">
+      <div class="avatar" style="font-size:11px">${name.charAt(0).toUpperCase()}</div>
+      <div class="user-row-info">
+        <div class="user-row-name">${name}${isYou ? ' <span style="color:var(--accent);font-size:11px">(you)</span>' : ''}</div>
+        <div class="user-row-events">${count} entr${count===1?'y':'ies'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROFILE
+// ═══════════════════════════════════════════════════════
+function openProfile() {
+  const name = currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'User';
+  const email = currentUser?.email || '-';
+  document.getElementById('profile-avatar-lg').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('profile-name-lg').textContent = name;
+  document.getElementById('profile-email-lg').textContent = email;
+  updateProfileStats();
+  document.getElementById('profile-overlay').classList.add('open');
+}
+
+function updateProfileStats() {
+  const myEvents = allEvents.filter(e => e.user_id === currentUser?.id);
+  document.getElementById('stat-total').textContent = myEvents.length;
+  document.getElementById('stat-available').textContent = myEvents.filter(e => e.type==='available').length;
+  document.getElementById('stat-busy').textContent = myEvents.filter(e => e.type==='busy').length;
+}
+
+function closeProfile() {
+  document.getElementById('profile-overlay').classList.remove('open');
+}
+
+function closeProfileIfBg(e) {
+  if (e.target === document.getElementById('profile-overlay')) closeProfile();
+}
+
+// ═══════════════════════════════════════════════════════
+//  COLOR PICKER
+// ═══════════════════════════════════════════════════════
+function buildColorPicker(containerId, onSelect, selectedColor) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = COLORS.map(c => `
+    <div class="color-opt${c===selectedColor?' selected':''}"
+      style="background:${c}"
+      onclick="selectColor('${containerId}','${c}')"></div>`).join('');
+  container._onSelect = onSelect;
+}
+
+function selectColor(containerId, color) {
+  const container = document.getElementById(containerId);
+  container.querySelectorAll('.color-opt').forEach(el => {
+    el.classList.toggle('selected', el.style.background === color || el.style.backgroundColor === color);
+  });
+  container._onSelect && container._onSelect(color);
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn._origText = btn._origText || btn.innerHTML;
+  btn.innerHTML = loading ? '<span class="spinner"></span>' : btn._origText;
+}
+
+let toastTimer = {};
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const id = Date.now();
+  const icons = { success: '✅', error: '❌', info: '📌' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  container.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='all 0.3s'; setTimeout(()=>el.remove(),300); }, 3000);
+}
+</script>
+</body>
+</html>
