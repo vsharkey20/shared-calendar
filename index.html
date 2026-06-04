@@ -1000,12 +1000,276 @@
   ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
 
-  /* Responsive */
+  /* ─── EMAIL VERIFICATION SCREEN ──────────────────── */
+  #verify-screen {
+    min-height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    padding: 24px;
+  }
+
+  .verify-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 48px 44px;
+    width: 100%;
+    max-width: 440px;
+    text-align: center;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+    animation: slideUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  .verify-icon {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, rgba(79,142,247,0.15), rgba(124,92,252,0.15));
+    border: 1px solid rgba(79,142,247,0.3);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 36px;
+    margin: 0 auto 24px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  #verify-screen { display: none; }
+  #verify-screen.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+    padding: 24px;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(79,142,247,0.3); }
+    50% { box-shadow: 0 0 0 12px rgba(79,142,247,0); }
+  }
+
+  .verify-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+
+  .verify-subtitle {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  .verify-email-badge {
+    display: inline-block;
+    background: rgba(79,142,247,0.12);
+    border: 1px solid rgba(79,142,247,0.25);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+    margin: 12px 0 24px;
+  }
+
+  .verify-steps {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    text-align: left;
+    margin-bottom: 24px;
+  }
+
+  .verify-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    font-size: 13px;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .verify-step:last-child { border-bottom: none; }
+
+  .verify-step-num {
+    width: 22px; height: 22px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .verify-note {
+    font-size: 12px;
+    color: var(--text3);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  /* ─── MOBILE BOTTOM NAV ────────────────────────── */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(19,25,41,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    z-index: 150;
+    padding: 8px 0 env(safe-area-inset-bottom, 8px);
+  }
+
+  .mobile-nav-inner {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .mobile-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text3);
+    transition: color 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .mobile-nav-btn.active { color: var(--accent); }
+  .mobile-nav-btn span:first-child { font-size: 22px; }
+  .mobile-nav-btn span:last-child { font-size: 10px; font-weight: 500; }
+
+  /* ─── MOBILE SIDEBAR DRAWER ───────────────────── */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 180;
+  }
+
+  .sidebar-overlay.open { display: block; animation: fadeIn 0.2s ease; }
+
+  /* ─── RESPONSIVE ──────────────────────────────── */
   @media (max-width: 768px) {
+    /* Layout */
     .app-layout { grid-template-columns: 1fr; }
-    .sidebar { display: none; }
-    .cal-cell { min-height: 70px; }
+    #mobile-menu-btn { display: flex !important; }
+
+    .sidebar {
+      position: fixed;
+      top: 64px; left: 0; bottom: 0;
+      width: 280px;
+      z-index: 190;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+      overflow-y: auto;
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    /* Calendar */
+    .calendar-main {
+      padding: 16px 12px;
+      padding-bottom: 90px; /* space for bottom nav */
+    }
+
+    .cal-header { margin-bottom: 16px; }
     .cal-month { font-size: 22px; }
+    .cal-year { font-size: 16px; }
+
+    .cal-nav-group { gap: 6px; }
+    .cal-nav { width: 34px; height: 34px; }
+    .today-btn { padding: 7px 12px; font-size: 12px; }
+
+    /* Grid cells — compact on mobile */
+    .cal-cell {
+      min-height: 60px;
+      padding: 6px 4px;
+    }
+
+    .cell-num {
+      font-size: 12px;
+      width: 24px; height: 24px;
+    }
+
+    .cal-cell.today .cell-num {
+      width: 24px; height: 24px;
+      border-radius: 6px;
+    }
+
+    /* Only show dots on mobile, hide text pills */
+    .cell-event-pill { display: none; }
+    .cell-more { display: none; }
+
+    /* Show colored dots instead */
+    .cell-events {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+
+    .cal-day-header { padding: 10px 4px; font-size: 10px; }
+
+    /* Topbar */
+    .topbar { padding: 0 16px; }
+    .topbar-logo-icon { display: none; }
+
+    /* Detail panel — full screen bottom sheet on mobile */
+    .detail-overlay {
+      padding: 0;
+      align-items: flex-end;
+    }
+
+    .detail-panel {
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      max-height: 92vh;
+    }
+
+    .panel-header { padding: 20px 20px 14px; }
+    .panel-body { padding: 16px 20px 100px; }
+
+    /* Forms */
+    .form-row { grid-template-columns: 1fr; }
+
+    /* Auth card */
+    .auth-card { padding: 32px 24px; }
+
+    /* Verify card */
+    .verify-card { padding: 36px 24px; }
+
+    /* Bottom nav visible */
+    .mobile-nav { display: block; }
+
+    /* Modal */
+    .modal-card { padding: 24px; }
+
+    /* Profile */
+    .profile-card { padding: 28px 20px; }
+
+    /* Toast */
+    .toast-container { bottom: 80px; right: 12px; left: 12px; }
+    .toast { min-width: unset; }
+  }
+
+  @media (max-width: 380px) {
+    .cal-cell { min-height: 48px; padding: 4px 2px; }
+    .cell-num { font-size: 11px; }
   }
 </style>
 </head>
@@ -1067,11 +1331,53 @@
   </div>
 </div>
 
+<!-- EMAIL VERIFICATION SCREEN -->
+<div id="verify-screen" style="display:none;min-height:100vh;align-items:center;justify-content:center;position:relative;z-index:1;padding:24px">
+  <div class="verify-card">
+    <div class="auth-logo" style="justify-content:center;margin-bottom:0">
+      <div class="auth-logo-icon">📅</div>
+      <div class="auth-logo-text">Synced</div>
+    </div>
+    <div style="height:28px"></div>
+    <div class="verify-icon">📬</div>
+    <div class="verify-title">Check your inbox!</div>
+    <div class="verify-subtitle">We sent a verification link to:</div>
+    <div class="verify-email-badge" id="verify-email-display">your@email.com</div>
+    <div class="verify-steps">
+      <div class="verify-step">
+        <div class="verify-step-num">1</div>
+        <span>Open your email and find the message from <strong>Synced</strong> (check spam too)</span>
+      </div>
+      <div class="verify-step">
+        <div class="verify-step-num">2</div>
+        <span>Click the <strong>"Confirm your account"</strong> link in the email</span>
+      </div>
+      <div class="verify-step">
+        <div class="verify-step-num">3</div>
+        <span>Come back here and <strong>sign in</strong> with your credentials</span>
+      </div>
+    </div>
+    <div class="verify-note">
+      Didn't receive it? Check your spam folder or wait a minute. The link expires in 24 hours.
+    </div>
+    <button class="btn btn-primary" onclick="goBackToLogin()" style="width:100%;margin-bottom:10px">
+      Go to Sign In
+    </button>
+    <button class="btn btn-ghost" onclick="resendVerification()" id="resend-btn" style="width:100%;font-size:13px">
+      Resend verification email
+    </button>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
 <!-- MAIN APP -->
 <div id="app-screen">
   <!-- Topbar -->
   <div class="topbar">
     <div class="topbar-logo">
+      <button id="mobile-menu-btn" onclick="toggleSidebar()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;width:34px;height:34px;display:none;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:18px;margin-right:10px;flex-shrink:0">☰</button>
       <div class="topbar-logo-icon">📅</div>
       Synced
     </div>
@@ -1154,6 +1460,21 @@
         <div class="cal-grid" id="main-grid"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<div class="mobile-nav" id="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mobile-nav-btn active" id="nav-cal" onclick="mobileNavSwitch('cal')">
+      <span>📅</span><span>Calendar</span>
+    </button>
+    <button class="mobile-nav-btn" id="nav-team" onclick="mobileNavSwitch('team')">
+      <span>👥</span><span>Team</span>
+    </button>
+    <button class="mobile-nav-btn" id="nav-profile" onclick="openProfile()">
+      <span>👤</span><span>Profile</span>
+    </button>
   </div>
 </div>
 
@@ -1322,6 +1643,12 @@ const sb = {
       method: 'POST', headers: this.authHeaders(token)
     });
   },
+  async resendEmail(email) {
+    await fetch(`${SUPABASE_URL}/auth/v1/resend`, {
+      method: 'POST', headers: this.headers,
+      body: JSON.stringify({ type: 'signup', email })
+    });
+  },
   async getUser(token) {
     const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
       headers: this.authHeaders(token)
@@ -1472,18 +1799,42 @@ async function handleRegister() {
     return;
   }
 
-  // Auto sign in after register
-  const loginRes = await sb.signIn(email, password);
-  if (loginRes.access_token) {
-    authToken = loginRes.access_token;
-    currentUser = loginRes.user;
-    localStorage.setItem('synced_session', JSON.stringify({ token: authToken, user: currentUser }));
-    await ensureProfile();
-    showApp();
-  } else {
-    showAuthError('Account created! Please sign in.');
-    switchTab('login');
-  }
+  // Supabase requires email confirmation — show the verify screen
+  lastRegEmail = email;
+  lastRegPassword = password;
+  showVerifyScreen(email);
+}
+
+let lastRegEmail = '';
+let lastRegPassword = '';
+
+function showVerifyScreen(email) {
+  document.getElementById('auth-screen').style.display = 'none';
+  const vs = document.getElementById('verify-screen');
+  vs.style.display = 'flex';
+  vs.style.alignItems = 'center';
+  vs.style.justifyContent = 'center';
+  vs.style.minHeight = '100vh';
+  vs.style.position = 'relative';
+  vs.style.zIndex = '1';
+  vs.style.padding = '24px';
+  document.getElementById('verify-email-display').textContent = email;
+}
+
+function goBackToLogin() {
+  document.getElementById('verify-screen').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  switchTab('login');
+  if (lastRegEmail) document.getElementById('login-email').value = lastRegEmail;
+}
+
+async function resendVerification() {
+  if (!lastRegEmail) return;
+  setLoading('resend-btn', true);
+  // Supabase resend: sign up again triggers resend if already exists
+  await sb.resendEmail(lastRegEmail);
+  setLoading('resend-btn', false);
+  toast('Verification email resent! Check your inbox.', 'success');
 }
 
 async function handleLogout() {
@@ -1521,6 +1872,7 @@ function showApp() {
 
   renderCalendars();
   loadData();
+  setupMobileUI();
 }
 
 function showAuth() {
@@ -1930,6 +2282,53 @@ function setLoading(btnId, loading) {
   btn.disabled = loading;
   btn._origText = btn._origText || btn.innerHTML;
   btn.innerHTML = loading ? '<span class="spinner"></span>' : btn._origText;
+}
+
+// ═══════════════════════════════════════════════════════
+//  MOBILE HELPERS
+// ═══════════════════════════════════════════════════════
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('open');
+}
+
+function closeSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.remove('open');
+  overlay.classList.remove('open');
+}
+
+function mobileNavSwitch(tab) {
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + tab)?.classList.add('active');
+  if (tab === 'team') {
+    toggleSidebar();
+    document.getElementById('nav-team').classList.add('active');
+  }
+}
+
+function setupMobileUI() {
+  const isMobile = window.innerWidth <= 768;
+  const menuBtn = document.getElementById('mobile-menu-btn');
+  if (menuBtn) menuBtn.style.display = isMobile ? 'flex' : 'none';
+}
+
+window.addEventListener('resize', setupMobileUI);
+
+// Render dot indicators for mobile calendar
+function renderMobileDots(dateStr, cell) {
+  if (window.innerWidth > 768) return;
+  const events = allEvents.filter(e => e.event_date === dateStr);
+  const cellEvts = cell.querySelector('.cell-events');
+  if (!cellEvts || events.length === 0) return;
+  // Show up to 3 colored dots
+  const dots = events.slice(0,3).map(e =>
+    `<div style="width:5px;height:5px;border-radius:50%;background:${e.color||'var(--accent)'}"></div>`
+  ).join('');
+  cellEvts.innerHTML = `<div style="display:flex;gap:2px;flex-wrap:wrap;justify-content:center;padding-top:2px">${dots}</div>`;
 }
 
 let toastTimer = {};
